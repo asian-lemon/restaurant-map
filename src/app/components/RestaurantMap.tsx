@@ -99,7 +99,7 @@ export default function RestaurantMap() {
 
       console.log('Searching for restaurants...', { address, radius });
 
-      const response = await fetch('/api/restaurants', {
+      const response = await fetch('http://localhost:3000/api/restaurants', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -115,15 +115,18 @@ export default function RestaurantMap() {
         throw new Error(errorData.error || 'Failed to fetch restaurants');
       }
 
-      const data = await response.json();
+      const data = JSON.parse(await response.text());
+
       console.log('Received data:', data);
 
-      if (!data.restaurants || !data.centerCoords) {
-        throw new Error('Invalid response format');
+
+      // Ensure response contains `success` and `restaurants`
+      if (!data.success || !data.restaurants) {
+        throw new Error('Invalid response format: Missing required fields');
       }
 
       setRestaurants(data.restaurants);
-      addMarkersToMap(data.restaurants, data.centerCoords.lat, data.centerCoords.lon);
+      addMarkersToMap(data.restaurants, data.lat, data.lon);
       
     } catch (err: any) {
       console.error('Search error:', err);
@@ -190,7 +193,6 @@ export default function RestaurantMap() {
               <div className="space-y-4 max-h-[520px] overflow-y-auto">
                 {restaurants.map((restaurant) => (
                   <div 
-                    key={restaurant._id}
                     className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                   >
                     <h4 className="font-medium">{restaurant.name}</h4>
